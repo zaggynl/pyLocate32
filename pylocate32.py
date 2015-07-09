@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from multiprocessing import Process
-import subprocess, sys, os, time, threading, shlex, time, signal, datetime, base64
+import subprocess, sys, os, time, threading, shlex, time, signal, datetime, base64, ConfigParser
 from PyQt4 import QtGui, QtCore
 #import ctypes  # An included library with Python install.
 #from pprint import pprint
@@ -22,9 +22,9 @@ UpdateAction = ''
 output = ''
 sucommand = ''
 haveSearchResults = False
-minimize_on_exit = True
-notify_on_updatedb_complete = True
 haveSearchResults = False
+config = ConfigParser.RawConfigParser()
+
 
 #base64 encoded icons
 strLocateIcon="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"
@@ -59,6 +59,24 @@ strAnim13="iVBORw0KGgoAAAANSUhEUgAAADAAAAAwAQAAAAB/ecQqAAAABGdBTUEAALGPC/xhBQAAA
 
 signal.signal(signal.SIGINT, signal.SIG_DFL) #So we can Ctrl+C out
 
+def readconfig(sourceClass,strVar): 
+  try: 
+    config.read("pylocate32.conf")
+    #print "DEBUG - SettingsWindow - readconfig("+strVar+")"
+    var = config.getboolean("Settings", str(strVar))
+    return var
+  except Exception as e:
+    QtGui.QMessageBox.warning(main_window, "pyLocate32 - Settings file error", "Settings file is corrupt\nFunction:readconfig("+str(SettingsWindow)+",strVar)\nError:"+str(e)) 
+
+def writeconfig(sourceClass, strVar, value):
+  #print "DEBUG - SettingsWindow - writeconfig("+strVar+",("+str(value) +")"
+  try: 
+    config.set("Settings", strVar, value)
+    with open('pylocate32.conf', 'wb') as configfile:
+      config.write(configfile)
+  except Exception as e:
+    QtGui.QMessageBox.warning(main_window, "pyLocate32 - Settings", "Error while writing pylocate32.conf:\nFunction:SettingsWindow.writeconfig("+str(SettingsWindow)+", strVar, value)\nError:"+str(e))
+	
 #from http://www.linuxquestions.org/questions/programming-9/pyside-qtreewidget-numeric-sorting-4175502323/#post5156692
 #with slight modification
 class ProxyModel(QtGui.QSortFilterProxyModel):
@@ -281,7 +299,7 @@ class Ui_MainWindow(object):
 
 
 class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
-    global minimize_on_exit
+    global config
 
     def __init__(self, win_parent=None):
         super(MainWindow, self).__init__()
@@ -292,13 +310,14 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     
     def on_button_clicked(self, b=None):
         doSearch()
+
     
     def lineEditReturnPressed(self, b=None):
         doSearch()
 
     
     def closeEvent(self, event):
-        if minimize_on_exit:
+        if (readconfig(self,"MinimizeToTray")):
             self.hide()
             event.ignore()
         else:
@@ -307,57 +326,91 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 class Ui_SettingsWindow(object):
     def setupUi(self, SettingsWindow):
         SettingsWindow.setObjectName(_fromUtf8("SettingsWindow"))
-        SettingsWindow.resize(366, 139)
+        SettingsWindow.resize(310, 70)
         self.centralWidget = QtGui.QWidget(SettingsWindow)
         self.centralWidget.setObjectName(_fromUtf8("centralWidget"))
-
-        self.kaputlabel = QtGui.QLabel(self.centralWidget)
-        self.kaputlabel.setGeometry(QtCore.QRect(20, 60, 150, 21))
-        self.kaputlabel.setText("Settings are currently disabled.")
 
         self.cb_minimize = QtGui.QCheckBox(self.centralWidget)
         self.cb_minimize.setGeometry(QtCore.QRect(20, 10, 131, 21))
         self.cb_minimize.setObjectName(_fromUtf8("cb_minimize"))
-        self.cb_minimize.setCheckState(2)
-        self.cb_minimize.setEnabled(False) #disabled as not working, have to figure out setting variable across classes
 
         self.cb_notification = QtGui.QCheckBox(self.centralWidget)
         self.cb_notification.setGeometry(QtCore.QRect(20, 40, 351, 21))
         self.cb_notification.setObjectName(_fromUtf8("cb_notification"))
-        self.cb_notification.setCheckState(2)
-        self.cb_notification.setEnabled(False) #disabled as not working, have to figure out setting variable across classes
+        
         self.retranslateUi(SettingsWindow)
         QtCore.QMetaObject.connectSlotsByName(SettingsWindow)
 
     def retranslateUi(self, SettingsWindow):
         SettingsWindow.setWindowTitle(_translate("SettingsWindow", "pyLocate32 - Settings", None))
-        self.cb_minimize.setText(_translate("SettingsWindow", "Minimize to tray", None))
+        self.cb_minimize.setText(_translate("SettingsWindow", "Minimize Search window to tray on exit.", None))
         self.cb_notification.setText(_translate("SettingsWindow", "Show notification when finished updating database", None))
 
 class SettingsWindow(QtGui.QWidget, Ui_SettingsWindow):
-    global minimize_on_exit
-    global notify_on_updatedb_complete
 
     def __init__(self, win_parent=None):
         super(SettingsWindow, self).__init__()
         self.setupUi(self)
-        self.hide()
         self.cb_minimize.stateChanged.connect(self.cb_minimize_changed)
         self.cb_notification.stateChanged.connect(self.cb_notification_changed)
+        
+        if os.path.isfile("pylocate32.conf"):
+	  config.read("pylocate32.conf")
+	  try:
+	    MinimizeToTray = config.getboolean("Settings", "MinimizeToTray")
+	    UpdateFinishedNotification = config.getboolean("Settings", "UpdateFinishedNotification")
+	    if(MinimizeToTray):
+	      self.cb_minimize.setCheckState(2)
+	    else:
+	      self.cb_minimize.setCheckState(0)
+	      
+	    if(UpdateFinishedNotification):
+	       self.cb_notification.setCheckState(2)
+	    else:
+	       self.cb_notification.setCheckState(0)  
+	       
+	  except Exception as e:
+	    QtGui.QMessageBox.warning(main_window, "pyLocate32 - Settings file error", "Settings file is corrupt\nError:"+str(e)+"\nDelete pyLocate32.conf and restart pyLocate32.")
+	else:
+	  QtGui.QMessageBox.information(main_window, "pyLocate32 - Settings", "Config file missing, creating new config file.")
+	  config.add_section("Settings")
+	  config.set("Settings", "MinimizeToTray", "True")
+	  config.set("Settings", "UpdateFinishedNotification", "True")
+	  try:
+	    with open('pylocate32.conf', 'wb') as configfile:
+	      config.write(configfile)
+	    QtGui.QMessageBox.information(main_window, "pyLocate32 - Settings", "Written config file pylocate32.conf.")
+	  except Exception as e:
+	    QtGui.QMessageBox.warning(main_window, "pyLocate32 - Settings", "Error while writing pylocate32.conf:\n"+str(e))
+    
+    def readconfig(self,strVar): 
+      try: 
+	config.read("pylocate32.conf")
+	var = config.getboolean("Settings", str(strVar))
+	return var
+      except Exception as e:
+	    QtGui.QMessageBox.warning(main_window, "pyLocate32 - Settings file error", "Settings file is corrupt\nFunction:SettingsWindow.readconfig(self,strVar)\nError:"+str(e)) 
+    
+    def writeconfig(self, strVar, value):
+      try: 
+	config.set("Settings", strVar, value)
+	with open('pylocate32.conf', 'wb') as configfile:
+	  config.write(configfile)
+      except Exception as e:
+	QtGui.QMessageBox.warning(main_window, "pyLocate32 - Settings", "Error while writing pylocate32.conf:\nFunction:SettingsWindow.writeconfig(self, strVar, value)\nError:"+str(e))
 
     def cb_minimize_changed(self, state):
         if state == 2:
-            minimize_on_exit = True
+	  writeconfig(self, "MinimizeToTray", True)
         elif state == 0:
-            minimize_on_exit = False
-        print "cb_minimize_changed_changed("+str(state)+") - minimize_on_exit="+str(minimize_on_exit)
+	  writeconfig(self, "MinimizeToTray", False)
+        var = self.readconfig("MinimizeToTray")
   
     def cb_notification_changed(self, state):
         if state == 2:
-            notify_on_updatedb_complete = True
+	  writeconfig(self, "UpdateFinishedNotification", True)
         elif state == 0:
-            notify_on_updatedb_complete = False
-        print "cb_notification_changed("+str(state)+") - notify_on_updatedb_complete="+str(notify_on_updatedb_complete)
+	  writeconfig(self, "UpdateFinishedNotification", False)
 
     def closeEvent(self, event):
         self.hide()
@@ -552,7 +605,7 @@ def updateCommand():
     global updateIsDone
     returncode = subprocess.call(shlex.split(sucommand+" /usr/bin/updatedb"))
     updateIsDone = True
-    if notify_on_updatedb_complete:
+    if (readconfig("updateCommand()","UpdateFinishedNotification")):
         tray_icon.showMessage("pyLocate32", "Database update completed.", 1)
 
 def updateDB():
@@ -677,9 +730,6 @@ if __name__ == "__main__":
 
     if sucommand == '':
         exit("Please install kdesudo or gksu, is required for starting/stopping locate database update.")
-    
-    minimize_on_exit = True
-    notify_on_updatedb_complete = True
 
     # Someone is launching this directly
     # Create the QApplication
