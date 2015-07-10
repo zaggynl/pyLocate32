@@ -476,7 +476,7 @@ def modif_date(filename):
         t = os.path.getmtime(filename)
         return datetime.datetime.fromtimestamp(t)
     except Exception as e:
-        return "Access Denied"
+	return str(e)
 
 def file_size(path):
     try:
@@ -489,7 +489,7 @@ def file_size(path):
             itemsize = str(itemsize)
         return itemsize
     except Exception as e:
-        return "Access Denied"
+	return str(e)
 
 def doSearch():
     global main_window
@@ -580,7 +580,7 @@ def searchAnimation():
     global searchAnimCount
     global haveSearchResults
     if searchIsDone == True:
-        searchTimer.stop()
+        
         if not haveSearchResults:
             viewmodel.clear()
             viewmodel.appendRow(QtGui.QStandardItem(""))
@@ -588,17 +588,18 @@ def searchAnimation():
             viewmodel.removeRows(0, 1)
         else:
             if viewmodel.rowCount() == 1:
-                headerstring = str(viewmodel.rowCount())+" result-Path"
+                headerstring = str(viewmodel.rowCount())+" result-Path"                
             else:
                 headerstring = str(viewmodel.rowCount())+" results-Path"
-                viewmodel.setHeaderData(0, QtCore.Qt.Horizontal, headerstring)
-                viewmodel.setHeaderData(1, QtCore.Qt.Horizontal, "Date")
-                viewmodel.setHeaderData(2, QtCore.Qt.Horizontal, "Size in MB")
+            viewmodel.setHeaderData(0, QtCore.Qt.Horizontal, headerstring)
+            viewmodel.setHeaderData(1, QtCore.Qt.Horizontal, "Date")
+            viewmodel.setHeaderData(2, QtCore.Qt.Horizontal, "Size in MB")
         searchAnimCount = 0
         app.restoreOverrideCursor()
         main_window.treeView.setEnabled(True)
         main_window.pushButton.setEnabled(True)
         main_window.lineEdit.setEnabled(True)
+        searchTimer.stop()
 
 def updateCommand():
     global notify_on_updatedb_complete
