@@ -59,24 +59,24 @@ strAnim13="iVBORw0KGgoAAAANSUhEUgAAADAAAAAwAQAAAAB/ecQqAAAABGdBTUEAALGPC/xhBQAAA
 
 signal.signal(signal.SIGINT, signal.SIG_DFL) #So we can Ctrl+C out
 
-def readconfig(sourceClass,strVar): 
-  try: 
-    config.read("pylocate32.conf")
-    #print "DEBUG - SettingsWindow - readconfig("+strVar+")"
-    var = config.getboolean("Settings", str(strVar))
-    return var
-  except Exception as e:
-    QtGui.QMessageBox.warning(main_window, "pyLocate32 - Settings file error", "Settings file is corrupt\nFunction:readconfig("+str(SettingsWindow)+",strVar)\nError:"+str(e)) 
+def readconfig(sourceClass,strVar):
+    try:
+        config.read("pylocate32.conf")
+        #print "DEBUG - SettingsWindow - readconfig("+strVar+")"
+        var = config.getboolean("Settings", str(strVar))
+        return var
+    except Exception as e:
+        QtGui.QMessageBox.warning(main_window, "pyLocate32 - Settings file error", "Settings file is corrupt\nFunction:readconfig("+str(SettingsWindow)+",strVar)\nError:"+str(e))
 
 def writeconfig(sourceClass, strVar, value):
-  #print "DEBUG - SettingsWindow - writeconfig("+strVar+",("+str(value) +")"
-  try: 
-    config.set("Settings", strVar, value)
-    with open('pylocate32.conf', 'wb') as configfile:
-      config.write(configfile)
-  except Exception as e:
-    QtGui.QMessageBox.warning(main_window, "pyLocate32 - Settings", "Error while writing pylocate32.conf:\nFunction:SettingsWindow.writeconfig("+str(SettingsWindow)+", strVar, value)\nError:"+str(e))
-	
+    #print "DEBUG - SettingsWindow - writeconfig("+strVar+",("+str(value) +")"
+    try:
+        config.set("Settings", strVar, value)
+        with open('pylocate32.conf', 'wb') as configfile:
+            config.write(configfile)
+    except Exception as e:
+        QtGui.QMessageBox.warning(main_window, "pyLocate32 - Settings", "Error while writing pylocate32.conf:\nFunction:SettingsWindow.writeconfig("+str(SettingsWindow)+", strVar, value)\nError:"+str(e))
+
 #from http://www.linuxquestions.org/questions/programming-9/pyside-qtreewidget-numeric-sorting-4175502323/#post5156692
 #with slight modification
 class ProxyModel(QtGui.QSortFilterProxyModel):
@@ -107,7 +107,7 @@ class myQTreeView(QtGui.QTreeView):
     global haveSearchResults
     global proxymodel
     proxymodel = ProxyModel()
-
+    
     @QtCore.pyqtSlot()
     def OpenFile(self):
         indexlist = self.selectedIndexes()
@@ -132,7 +132,7 @@ class myQTreeView(QtGui.QTreeView):
     def OpenFolder(self):
         indexlist = self.selectedIndexes()
         #selection is more than 1 row (multiple files)
-        if len(indexlist) > 3: 
+        if len(indexlist) > 3:
             reply = QtGui.QMessageBox.warning(self, "Open Folder question", "Multiple items selected, open all folders?", QtGui.QMessageBox.Yes|QtGui.QMessageBox.No)
             if reply == QtGui.QMessageBox.Yes:
                 for indexitem in self.selectedIndexes():
@@ -292,7 +292,7 @@ class Ui_MainWindow(object):
         self.centralWidget.setLayout(form)
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
-
+    
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(_translate("MainWindow", "pyLocate32 - Search", None))
         self.pushButton.setText(_translate("pushButton", "Search", None))
@@ -307,15 +307,14 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.pushButton.clicked.connect(self.on_button_clicked)
         self.lineEdit.returnPressed.connect(self.lineEditReturnPressed)
         self.lineEdit.setFocus()
-    
+        
+
     def on_button_clicked(self, b=None):
         doSearch()
 
-    
     def lineEditReturnPressed(self, b=None):
         doSearch()
-
-    
+        
     def closeEvent(self, event):
         if (readconfig(self,"MinimizeToTray")):
             self.hide()
@@ -337,7 +336,7 @@ class Ui_SettingsWindow(object):
         self.cb_notification = QtGui.QCheckBox(self.centralWidget)
         self.cb_notification.setGeometry(QtCore.QRect(20, 40, 351, 21))
         self.cb_notification.setObjectName(_fromUtf8("cb_notification"))
-        
+
         self.retranslateUi(SettingsWindow)
         QtCore.QMetaObject.connectSlotsByName(SettingsWindow)
 
@@ -353,64 +352,64 @@ class SettingsWindow(QtGui.QWidget, Ui_SettingsWindow):
         self.setupUi(self)
         self.cb_minimize.stateChanged.connect(self.cb_minimize_changed)
         self.cb_notification.stateChanged.connect(self.cb_notification_changed)
-        
+
         if os.path.isfile("pylocate32.conf"):
-	  config.read("pylocate32.conf")
-	  try:
-	    MinimizeToTray = config.getboolean("Settings", "MinimizeToTray")
-	    UpdateFinishedNotification = config.getboolean("Settings", "UpdateFinishedNotification")
-	    if(MinimizeToTray):
-	      self.cb_minimize.setCheckState(2)
-	    else:
-	      self.cb_minimize.setCheckState(0)
-	      
-	    if(UpdateFinishedNotification):
-	       self.cb_notification.setCheckState(2)
-	    else:
-	       self.cb_notification.setCheckState(0)  
-	       
-	  except Exception as e:
-	    QtGui.QMessageBox.warning(main_window, "pyLocate32 - Settings file error", "Settings file is corrupt\nError:"+str(e)+"\nDelete pyLocate32.conf and restart pyLocate32.")
-	else:
-	  QtGui.QMessageBox.information(main_window, "pyLocate32 - Settings", "Config file missing, creating new config file.")
-	  config.add_section("Settings")
-	  config.set("Settings", "MinimizeToTray", "True")
-	  config.set("Settings", "UpdateFinishedNotification", "True")
-	  try:
-	    with open('pylocate32.conf', 'wb') as configfile:
-	      config.write(configfile)
-	    QtGui.QMessageBox.information(main_window, "pyLocate32 - Settings", "Written config file pylocate32.conf.")
-	  except Exception as e:
-	    QtGui.QMessageBox.warning(main_window, "pyLocate32 - Settings", "Error while writing pylocate32.conf:\n"+str(e))
-    
-    def readconfig(self,strVar): 
-      try: 
-	config.read("pylocate32.conf")
-	var = config.getboolean("Settings", str(strVar))
-	return var
-      except Exception as e:
-	    QtGui.QMessageBox.warning(main_window, "pyLocate32 - Settings file error", "Settings file is corrupt\nFunction:SettingsWindow.readconfig(self,strVar)\nError:"+str(e)) 
-    
+            config.read("pylocate32.conf")
+            try:
+                MinimizeToTray = config.getboolean("Settings", "MinimizeToTray")
+                UpdateFinishedNotification = config.getboolean("Settings", "UpdateFinishedNotification")
+                if(MinimizeToTray):
+                    self.cb_minimize.setCheckState(2)
+                else:
+                    self.cb_minimize.setCheckState(0)
+
+                if(UpdateFinishedNotification):
+                    self.cb_notification.setCheckState(2)
+                else:
+                    self.cb_notification.setCheckState(0)
+
+            except Exception as e:
+                QtGui.QMessageBox.warning(main_window, "pyLocate32 - Settings file error", "Settings file is corrupt\nError:"+str(e)+"\nDelete pyLocate32.conf and restart pyLocate32.")
+        else:
+            QtGui.QMessageBox.information(main_window, "pyLocate32 - Settings", "Config file missing, creating new config file.")
+            config.add_section("Settings")
+            config.set("Settings", "MinimizeToTray", "True")
+            config.set("Settings", "UpdateFinishedNotification", "True")
+            try:
+                with open('pylocate32.conf', 'wb') as configfile:
+                    config.write(configfile)
+                QtGui.QMessageBox.information(main_window, "pyLocate32 - Settings", "Written config file pylocate32.conf.")
+            except Exception as e:
+                QtGui.QMessageBox.warning(main_window, "pyLocate32 - Settings", "Error while writing pylocate32.conf:\n"+str(e))
+
+    def readconfig(self,strVar):
+        try:
+            config.read("pylocate32.conf")
+            var = config.getboolean("Settings", str(strVar))
+            return var
+        except Exception as e:
+            QtGui.QMessageBox.warning(main_window, "pyLocate32 - Settings file error", "Settings file is corrupt\nFunction:SettingsWindow.readconfig(self,strVar)\nError:"+str(e))
+
     def writeconfig(self, strVar, value):
-      try: 
-	config.set("Settings", strVar, value)
-	with open('pylocate32.conf', 'wb') as configfile:
-	  config.write(configfile)
-      except Exception as e:
-	QtGui.QMessageBox.warning(main_window, "pyLocate32 - Settings", "Error while writing pylocate32.conf:\nFunction:SettingsWindow.writeconfig(self, strVar, value)\nError:"+str(e))
+        try:
+            config.set("Settings", strVar, value)
+            with open('pylocate32.conf', 'wb') as configfile:
+                config.write(configfile)
+        except Exception as e:
+            QtGui.QMessageBox.warning(main_window, "pyLocate32 - Settings", "Error while writing pylocate32.conf:\nFunction:SettingsWindow.writeconfig(self, strVar, value)\nError:"+str(e))
 
     def cb_minimize_changed(self, state):
         if state == 2:
-	  writeconfig(self, "MinimizeToTray", True)
+            writeconfig(self, "MinimizeToTray", True)
         elif state == 0:
-	  writeconfig(self, "MinimizeToTray", False)
+            writeconfig(self, "MinimizeToTray", False)
         var = self.readconfig("MinimizeToTray")
-  
+
     def cb_notification_changed(self, state):
         if state == 2:
-	  writeconfig(self, "UpdateFinishedNotification", True)
+            writeconfig(self, "UpdateFinishedNotification", True)
         elif state == 0:
-	  writeconfig(self, "UpdateFinishedNotification", False)
+            writeconfig(self, "UpdateFinishedNotification", False)
 
     def closeEvent(self, event):
         self.hide()
@@ -422,7 +421,7 @@ class TrayIcon(QtGui.QSystemTrayIcon):
         QtGui.QMainWindow.__init__(self, win_parent)
 
         self.setToolTip("pyLocate32")
-        
+
         restoreTrayIcon()
 
         #menu icons below, currently empty
@@ -445,8 +444,8 @@ class TrayIcon(QtGui.QSystemTrayIcon):
         UpdateAction = ActionsMenu.addAction(UpdateIcon, "Update Database")
         StopUpdateAction = ActionsMenu.addAction(StopUpdateIcon, "Stop Updating")
         ActionsMenu.addSeparator()
-        SettingsAction = ActionsMenu.addAction(UpdateIcon, "Settings")
-        AboutAction = ActionsMenu.addAction(UpdateIcon, "About")
+        SettingsAction = ActionsMenu.addAction(SettingsIcon, "Settings")
+        AboutAction = ActionsMenu.addAction(AboutIcon, "About")
         ActionsMenu.addSeparator()
         QuitAction = ActionsMenu.addAction(QuitIcon, "Exit")
 
@@ -476,7 +475,7 @@ def modif_date(filename):
         t = os.path.getmtime(filename)
         return datetime.datetime.fromtimestamp(t)
     except Exception as e:
-	return str(e)
+        return str(e)
 
 def file_size(path):
     try:
@@ -489,7 +488,7 @@ def file_size(path):
             itemsize = str(itemsize)
         return itemsize
     except Exception as e:
-	return str(e)
+        return str(e)
 
 def doSearch():
     global main_window
@@ -580,7 +579,7 @@ def searchAnimation():
     global searchAnimCount
     global haveSearchResults
     if searchIsDone == True:
-        
+
         if not haveSearchResults:
             viewmodel.clear()
             viewmodel.appendRow(QtGui.QStandardItem(""))
@@ -588,7 +587,7 @@ def searchAnimation():
             viewmodel.removeRows(0, 1)
         else:
             if viewmodel.rowCount() == 1:
-                headerstring = str(viewmodel.rowCount())+" result-Path"                
+                headerstring = str(viewmodel.rowCount())+" result-Path"
             else:
                 headerstring = str(viewmodel.rowCount())+" results-Path"
             viewmodel.setHeaderData(0, QtCore.Qt.Horizontal, headerstring)
@@ -641,7 +640,7 @@ def base64toIcon(string):
 
 def restoreTrayIcon():
     global LocateIcon
-    tray_icon.setToolTip("pyLocate32")           
+    tray_icon.setToolTip("pyLocate32")
     LocateIcon = base64toIcon(strLocateIcon)
     tray_icon.setIcon(LocateIcon)
     tray_icon.show()
@@ -667,13 +666,13 @@ def updateAnimation():
     UpdateAction.setEnabled(False)
     StopUpdateAction.setEnabled(True)
     if updateIsDone == False:
-		
+
         if updateAnimCount == 0:
             LocateIcon = base64toIcon(strAnim1)
-            
+
         elif updateAnimCount == 1:
             LocateIcon = base64toIcon(strAnim2)
-            
+
         elif updateAnimCount == 2:
             LocateIcon = base64toIcon(strAnim3)
 
@@ -717,7 +716,7 @@ def updateAnimation():
         StopUpdateAction.setEnabled(False)
         UpdateAction.setEnabled(True)
 
-if __name__ == "__main__":  
+if __name__ == "__main__":
     #check if running under linux, else exit
     if os.name is not 'posix':
         exit("This version of pyLocate32 is for Linux, for Windows try: http://pyLocate32.cogit.net/ (different developer)")
