@@ -330,7 +330,7 @@ class Ui_SettingsWindow(object):
         self.centralWidget.setObjectName(_fromUtf8("centralWidget"))
 
         self.cb_minimize = QtGui.QCheckBox(self.centralWidget)
-        self.cb_minimize.setGeometry(QtCore.QRect(20, 10, 131, 21))
+        self.cb_minimize.setGeometry(QtCore.QRect(20, 10, 231, 21))
         self.cb_minimize.setObjectName(_fromUtf8("cb_minimize"))
 
         self.cb_notification = QtGui.QCheckBox(self.centralWidget)
