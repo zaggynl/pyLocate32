@@ -593,10 +593,9 @@ def stopSearch():
     global searchprocess
     global searchThreadAlive
     searchIsDone = True
-    #viewmodel.clear()
-    #viewmodel.appendRow(QtGui.QStandardItem(""))
     viewmodel.setHeaderData(0, QtCore.Qt.Horizontal, "Search stopped.")
-    #viewmodel.removeRows(0, 1)
+    viewmodel.setHeaderData(1, QtCore.Qt.Horizontal, "Date")
+    viewmodel.setHeaderData(2, QtCore.Qt.Horizontal, "Size in MB")
     haveSearchResults = False
     searchAnimCount = 0
     main_window.treeView.setEnabled(True)
@@ -606,6 +605,13 @@ def stopSearch():
     searchTimer.stop()
     app.restoreOverrideCursor()
     searchThreadAlive = False
+    if viewmodel.rowCount() == 1:
+        headerstring = str(viewmodel.rowCount())+" result-Path"
+    else:
+        headerstring = str(viewmodel.rowCount())+" results-Path"
+    viewmodel.setHeaderData(0, QtCore.Qt.Horizontal, headerstring)
+    viewmodel.setHeaderData(1, QtCore.Qt.Horizontal, "Date")
+    viewmodel.setHeaderData(2, QtCore.Qt.Horizontal, "Size in MB")
 
 
 
@@ -617,9 +623,7 @@ def searchThread():
     global searchprocess
     global searchThreadAlive
     haveSearchResults = False
-    searchTimer.stop()
-    
-
+    searchTimer.start()
     try:
         args = shlex.split("/usr/bin/locate "+str(main_window.lineEdit.text()))
         searchprocess = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
