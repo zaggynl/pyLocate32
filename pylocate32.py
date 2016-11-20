@@ -1,11 +1,6 @@
 #!/usr/bin/python
 
 #requires: Linux, KDE, PyQt4, toledo
-
-#todolist for next version:
-#-multiple search button presses and it segfaults?
-#-after search mouse cursor stays on BusyCursor?
-
 from multiprocessing import Process
 import subprocess, sys, os, time, threading, shlex, time, signal, datetime, base64, ConfigParser
 from PyQt4 import QtGui, QtCore
