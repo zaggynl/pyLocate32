@@ -346,7 +346,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 class Ui_SettingsWindow(object):
     def setupUi(self, SettingsWindow):
         SettingsWindow.setObjectName(_fromUtf8("SettingsWindow"))
-        SettingsWindow.resize(360, 70)
+        SettingsWindow.resize(360, 110)
         self.centralWidget = QtGui.QWidget(SettingsWindow)
         self.centralWidget.setObjectName(_fromUtf8("centralWidget"))
 
@@ -357,6 +357,10 @@ class Ui_SettingsWindow(object):
         self.cb_notification = QtGui.QCheckBox(self.centralWidget)
         self.cb_notification.setGeometry(QtCore.QRect(20, 40, 351, 21))
         self.cb_notification.setObjectName(_fromUtf8("cb_notification"))
+        
+        self.cb_hidemainonstartup = QtGui.QCheckBox(self.centralWidget)
+        self.cb_hidemainonstartup.setGeometry(QtCore.QRect(20, 70, 351, 21))
+        self.cb_hidemainonstartup.setObjectName(_fromUtf8("cb_hidemainonstartup"))
 
         self.retranslateUi(SettingsWindow)
         QtCore.QMetaObject.connectSlotsByName(SettingsWindow)
@@ -365,6 +369,7 @@ class Ui_SettingsWindow(object):
         SettingsWindow.setWindowTitle(_translate("SettingsWindow", "pyLocate32 - Settings", None))
         self.cb_minimize.setText(_translate("SettingsWindow", "Minimize Search window to tray on exit.", None))
         self.cb_notification.setText(_translate("SettingsWindow", "Show notification when finished updating database", None))
+        self.cb_hidemainonstartup.setText(_translate("SettingsWindow", "Hide Main window on startup", None))
 
 class SettingsWindow(QtGui.QWidget, Ui_SettingsWindow):
 
@@ -373,12 +378,15 @@ class SettingsWindow(QtGui.QWidget, Ui_SettingsWindow):
         self.setupUi(self)
         self.cb_minimize.stateChanged.connect(self.cb_minimize_changed)
         self.cb_notification.stateChanged.connect(self.cb_notification_changed)
+        self.cb_hidemainonstartup.stateChanged.connect(self.cb_hidemainonstartup_changed)
 
         if os.path.isfile("pylocate32.conf"):
             config.read("pylocate32.conf")
             try:
                 MinimizeToTray = config.getboolean("Settings", "MinimizeToTray")
                 UpdateFinishedNotification = config.getboolean("Settings", "UpdateFinishedNotification")
+                HideMainOnStartup = config.getboolean("Settings", "HideMainOnStartup")
+                
                 if(MinimizeToTray):
                     self.cb_minimize.setCheckState(2)
                 else:
@@ -388,6 +396,11 @@ class SettingsWindow(QtGui.QWidget, Ui_SettingsWindow):
                     self.cb_notification.setCheckState(2)
                 else:
                     self.cb_notification.setCheckState(0)
+                    
+                if(HideMainOnStartup):
+                    self.cb_hidemainonstartup.setCheckState(2)
+                else:
+                    self.cb_hidemainonstartup.setCheckState(0)
 
             except Exception as e:
                 QtGui.QMessageBox.warning(main_window, "pyLocate32 - Settings file error", "Settings file is corrupt\nError:"+str(e)+"\nDelete pyLocate32.conf and restart pyLocate32.")
@@ -396,6 +409,7 @@ class SettingsWindow(QtGui.QWidget, Ui_SettingsWindow):
             config.add_section("Settings")
             config.set("Settings", "MinimizeToTray", "True")
             config.set("Settings", "UpdateFinishedNotification", "True")
+            config.set("Settings", "HideMainOnStartup", "True")
             try:
                 with open('pylocate32.conf', 'wb') as configfile:
                     config.write(configfile)
@@ -431,7 +445,13 @@ class SettingsWindow(QtGui.QWidget, Ui_SettingsWindow):
             writeconfig(self, "UpdateFinishedNotification", True)
         elif state == 0:
             writeconfig(self, "UpdateFinishedNotification", False)
-
+            
+    def cb_hidemainonstartup_changed(self, state):
+        if state == 2:
+            writeconfig(self, "HideMainOnStartup", True)
+        elif state == 0:
+            writeconfig(self, "HideMainOnStartup", False)
+            
     def closeEvent(self, event):
         self.hide()
         event.ignore()
@@ -803,7 +823,8 @@ if __name__ == "__main__":
 
     #The Main window
     main_window = MainWindow()
-    main_window.show()
+    if not (readconfig(app,"hidemainonstartup")):
+        main_window.show()
 
     #tray icon
     tray_icon = TrayIcon()
