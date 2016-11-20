@@ -1,5 +1,15 @@
 #!/usr/bin/python
 
+#requires: Linux, KDE, PyQt4, toledo
+
+#todolist for next version:
+#V-add kdesu for sucommand
+#V-fix settings window size
+#V-allow only one instance of pylocate32
+#V-add Stop button
+#-multiple search button presses and it segfaults?
+#-after search mouse cursor stays on BusyCursor?
+
 from multiprocessing import Process
 import subprocess, sys, os, time, threading, shlex, time, signal, datetime, base64, ConfigParser
 from PyQt4 import QtGui, QtCore
@@ -7,6 +17,8 @@ from PyQt4 import QtGui, QtCore
 #from pprint import pprint
 #from inspect import getmembers
 from pipes import quote
+from tendo import singleton
+me = singleton.SingleInstance() # will sys.exit(-1) if other instance is running
 
 #sys.settrace
 #globally used variables
@@ -258,32 +270,41 @@ class Ui_MainWindow(object):
         self.lineEdit = QtGui.QLineEdit()
         self.lineEdit.setGeometry(QtCore.QRect(10, 10, 211, 26))
         self.lineEdit.setObjectName(_fromUtf8("lineEdit"))
-        self.pushButton = QtGui.QPushButton()
-        self.pushButton.setGeometry(QtCore.QRect(230, 10, 81, 26))
-        self.pushButton.setObjectName(_fromUtf8("pushButton"))
-
+        
+        self.buttonSearch = QtGui.QPushButton()
+        self.buttonSearch.setGeometry(QtCore.QRect(230, 10, 81, 26))
+        self.buttonSearch.setObjectName(_fromUtf8("buttonSearch"))
+        
         form.addWidget(self.lineEdit, 1, 0)
-        form.addWidget(self.pushButton, 1, 1)
-
+        form.addWidget(self.buttonSearch, 1, 1)
+        
         self.treeView = myQTreeView(self.centralWidget)
         self.treeView.setSortingEnabled(True)
         self.treeView.setSelectionMode(QtGui.QAbstractItemView.MultiSelection)
         self.treeView.setGeometry(QtCore.QRect(10, 40, 301, 141))
         self.treeView.setObjectName(_fromUtf8("treeView"))
-        form.addWidget(self.treeView, 2, 0)
+        form.addWidget(self.treeView, 4, 0)
+        
+        self.buttonStop = QtGui.QPushButton()
+        self.buttonStop.setGeometry(QtCore.QRect(230, 10, 81, 26))
+        self.buttonStop.setObjectName(_fromUtf8("buttonStop"))
+        form.addWidget(self.buttonStop, 3, 1)
+        self.buttonStop.setEnabled(False)
 
         self.treeView.connect(self.treeView, QtCore.SIGNAL("triggered()"), self.treeView.OpenFile)
         self.treeView.connect(self.treeView, QtCore.SIGNAL("triggered()"), self.treeView.OpenFolder)
         self.treeView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.treeView.connect(self.treeView, QtCore.SIGNAL("customContextMenuRequested(QPoint)"), self.treeView, QtCore.SLOT("contextMenuRequested(QPoint)"))
 
-        self.menuBar = QtGui.QMenuBar(MainWindow)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 320, 22))
-        self.menuBar.setObjectName(_fromUtf8("menuBar"))
-        MainWindow.setMenuBar(self.menuBar)
-        self.mainToolBar = QtGui.QToolBar(MainWindow)
-        self.mainToolBar.setObjectName(_fromUtf8("mainToolBar"))
-        MainWindow.addToolBar(QtCore.Qt.TopToolBarArea, self.mainToolBar)
+        #can I just remove this?
+        #self.menuBar = QtGui.QMenuBar(MainWindow)
+        #self.menuBar.setGeometry(QtCore.QRect(0, 0, 320, 22))
+        #self.menuBar.setObjectName(_fromUtf8("menuBar"))
+        #MainWindow.setMenuBar(self.menuBar)
+        #self.mainToolBar = QtGui.QToolBar(MainWindow)
+        #self.mainToolBar.setObjectName(_fromUtf8("mainToolBar"))
+        #MainWindow.addToolBar(QtCore.Qt.TopToolBarArea, self.mainToolBar)
+        
         self.statusBar = QtGui.QStatusBar(MainWindow)
         self.statusBar.setObjectName(_fromUtf8("statusBar"))
         MainWindow.setStatusBar(self.statusBar)
@@ -295,7 +316,9 @@ class Ui_MainWindow(object):
     
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(_translate("MainWindow", "pyLocate32 - Search", None))
-        self.pushButton.setText(_translate("pushButton", "Search", None))
+        self.buttonSearch.setText(_translate("buttonSearch", "Search", None))
+        self.buttonStop.setText(_translate("buttonStop", "Stop", None))
+
 
 
 class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
@@ -304,16 +327,19 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def __init__(self, win_parent=None):
         super(MainWindow, self).__init__()
         self.setupUi(self)
-        self.pushButton.clicked.connect(self.on_button_clicked)
+        self.buttonSearch.clicked.connect(self.on_buttonSearch_clicked)
         self.lineEdit.returnPressed.connect(self.lineEditReturnPressed)
         self.lineEdit.setFocus()
+        self.buttonStop.clicked.connect(self.on_buttonStop_clicked)
         
-
-    def on_button_clicked(self, b=None):
+    def on_buttonSearch_clicked(self, b=None):
         doSearch()
 
     def lineEditReturnPressed(self, b=None):
         doSearch()
+        
+    def on_buttonStop_clicked(self, b=None):
+        stopSearch()
         
     def closeEvent(self, event):
         if (readconfig(self,"MinimizeToTray")):
@@ -325,12 +351,12 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 class Ui_SettingsWindow(object):
     def setupUi(self, SettingsWindow):
         SettingsWindow.setObjectName(_fromUtf8("SettingsWindow"))
-        SettingsWindow.resize(310, 70)
+        SettingsWindow.resize(360, 70)
         self.centralWidget = QtGui.QWidget(SettingsWindow)
         self.centralWidget.setObjectName(_fromUtf8("centralWidget"))
 
         self.cb_minimize = QtGui.QCheckBox(self.centralWidget)
-        self.cb_minimize.setGeometry(QtCore.QRect(20, 10, 231, 21))
+        self.cb_minimize.setGeometry(QtCore.QRect(20, 10, 351, 21))
         self.cb_minimize.setObjectName(_fromUtf8("cb_minimize"))
 
         self.cb_notification = QtGui.QCheckBox(self.centralWidget)
@@ -499,7 +525,10 @@ def doSearch():
     global haveSearchResults
     global searchThreadVar
     global proxymodel
-    main_window.pushButton.setEnabled(False)
+    global searchThreadAlive
+    searchThreadAlive = True
+    main_window.buttonSearch.setEnabled(False)
+    main_window.buttonStop.setEnabled(True)
     continuesearch = True
     searchIsDone = False
     main_window.treeView.setModel(None)
@@ -521,7 +550,8 @@ def doSearch():
             main_window.lineEdit.setText('*')
         elif reply == QtGui.QMessageBox.No:
             viewmodel.clear()
-            main_window.pushButton.setEnabled(True)
+            main_window.buttonSearch.setEnabled(True)
+            main_window.buttonStop.setEnabled(False)
             main_window.lineEdit.setEnabled(True)
             continuesearch = False
             haveSearchResults = False
@@ -539,13 +569,42 @@ def doSearch():
         searchTimer.start(200)
         app.setOverrideCursor(QtGui.QCursor(QtCore.Qt.BusyCursor))
         searchThreadVar.start()
+        
+def stopSearch():
+    global searchTimer
+    global searchIsDone
+    global viewmodel
+    global haveSearchResults
+    global searchprocess
+    global searchThreadAlive
+    searchIsDone = True
+    #viewmodel.clear()
+    #viewmodel.appendRow(QtGui.QStandardItem(""))
+    viewmodel.setHeaderData(0, QtCore.Qt.Horizontal, "Search stopped.")
+    #viewmodel.removeRows(0, 1)
+    haveSearchResults = False
+    searchAnimCount = 0
+    main_window.treeView.setEnabled(True)
+    main_window.buttonSearch.setEnabled(True)
+    main_window.buttonStop.setEnabled(False)
+    main_window.lineEdit.setEnabled(True)
+    searchTimer.stop()
+    app.restoreOverrideCursor()
+    searchThreadAlive = False
+
+
 
 def searchThread():
     global haveSearchResults
     global searchIsDone
     global viewmodel
     global searchThreadPid
+    global searchprocess
+    global searchThreadAlive
     haveSearchResults = False
+    searchTimer.stop()
+    
+
     try:
         args = shlex.split("/usr/bin/locate "+str(main_window.lineEdit.text()))
         searchprocess = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -554,11 +613,15 @@ def searchThread():
         if output2 == ['']:
             haveSearchResults = False
         else:
-            haveSearchResults = True
-            viewmodel.appendRow(QtGui.QStandardItem(""))
-            viewmodel.setHeaderData(0, QtCore.Qt.Horizontal, "Creating list - please wait") #QObject::connect: Cannot queue arguments of type 'Qt::Orientation' (Make sure 'Qt::Orientation' is registered using qRegisterMetaType()
-            viewmodel.removeRows(0, 1)
+            if  searchThreadAlive:
+                haveSearchResults = True
+                viewmodel.appendRow(QtGui.QStandardItem(""))
+                viewmodel.setHeaderData(0, QtCore.Qt.Horizontal, "Creating list - please wait") #QObject::connect: Cannot queue arguments of type 'Qt::Orientation' (Make sure 'Qt::Orientation' is registered using qRegisterMetaType()
+                viewmodel.removeRows(0, 1)
             for item in output2:
+                if not searchThreadAlive:
+                    #print "DEBUG - searchThread() - killing searchThread"
+                    return
                 itempath = QtGui.QStandardItem(item)
                 if not itempath.text() == '':
                     path = itempath.text()
@@ -596,7 +659,8 @@ def searchAnimation():
         searchAnimCount = 0
         app.restoreOverrideCursor()
         main_window.treeView.setEnabled(True)
-        main_window.pushButton.setEnabled(True)
+        main_window.buttonSearch.setEnabled(True)
+        main_window.buttonStop.setEnabled(False)
         main_window.lineEdit.setEnabled(True)
         searchTimer.stop()
 
@@ -727,9 +791,12 @@ if __name__ == "__main__":
 
     if os.path.isfile("/usr/bin/gksu"):
         sucommand = "/usr/bin/gksu"
+        
+    if os.path.isfile("/usr/bin/kdesu"):
+        sucommand = "/usr/bin/kdesu -c"
 
     if sucommand == '':
-        exit("Please install kdesudo or gksu, is required for starting/stopping locate database update.")
+        exit("Please install kdesudo, gksu or kdesu, is required for starting/stopping locate database update.")
 
     # Someone is launching this directly
     # Create the QApplication
