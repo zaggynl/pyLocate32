@@ -3,10 +3,6 @@
 #requires: Linux, KDE, PyQt4, toledo
 
 #todolist for next version:
-#V-add kdesu for sucommand
-#V-fix settings window size
-#V-allow only one instance of pylocate32
-#V-add Stop button
 #-multiple search button presses and it segfaults?
 #-after search mouse cursor stays on BusyCursor?
 
@@ -33,7 +29,6 @@ updateIsDone = False
 UpdateAction = ''
 output = ''
 sucommand = ''
-haveSearchResults = False
 haveSearchResults = False
 config = ConfigParser.RawConfigParser()
 
@@ -713,8 +708,8 @@ def showSettingScreen():
     settings_window.show()
 
 def showAbout():
-    QtGui.QMessageBox.information(main_window, "About", "pyLocate32 (http://Locate32.cogit.net/) lookalike for Linux, by zaggynl")
-
+    tray_icon.showMessage("pyLocate32", "About - pyLocate32 (http://Locate32.cogit.net/) lookalike for Linux, by zaggynl", 1)
+    
 def exitProperly():
     sys.exit(0)
 
