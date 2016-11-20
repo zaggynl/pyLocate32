@@ -31,7 +31,8 @@ output = ''
 sucommand = ''
 haveSearchResults = False
 config = ConfigParser.RawConfigParser()
-
+scriptlocation = os.path.dirname(os.path.realpath(__file__))
+fullconfpath = scriptlocation+'/pylocate32.conf'
 
 #base64 encoded icons
 strLocateIcon="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"
@@ -68,7 +69,7 @@ signal.signal(signal.SIGINT, signal.SIG_DFL) #So we can Ctrl+C out
 
 def readconfig(sourceClass,strVar):
     try:
-        config.read("pylocate32.conf")
+        config.read(fullconfpath)
         #print "DEBUG - SettingsWindow - readconfig("+strVar+")"
         var = config.getboolean("Settings", str(strVar))
         return var
@@ -79,10 +80,10 @@ def writeconfig(sourceClass, strVar, value):
     #print "DEBUG - SettingsWindow - writeconfig("+strVar+",("+str(value) +")"
     try:
         config.set("Settings", strVar, value)
-        with open('pylocate32.conf', 'wb') as configfile:
+        with open(fullconfpath, 'wb') as configfile:
             config.write(configfile)
     except Exception as e:
-        QtGui.QMessageBox.warning(main_window, "pyLocate32 - Settings", "Error while writing pylocate32.conf:\nFunction:SettingsWindow.writeconfig("+str(SettingsWindow)+", strVar, value)\nError:"+str(e))
+        QtGui.QMessageBox.warning(main_window, "pyLocate32 - Settings", "Error while writing "+fullconfpath+":\nFunction:SettingsWindow.writeconfig("+str(SettingsWindow)+", strVar, value)\nError:"+str(e))
 
 #from http://www.linuxquestions.org/questions/programming-9/pyside-qtreewidget-numeric-sorting-4175502323/#post5156692
 #with slight modification
@@ -380,12 +381,12 @@ class SettingsWindow(QtGui.QWidget, Ui_SettingsWindow):
         self.cb_notification.stateChanged.connect(self.cb_notification_changed)
         self.cb_hidemainonstartup.stateChanged.connect(self.cb_hidemainonstartup_changed)
 
-        if os.path.isfile("pylocate32.conf"):
-            config.read("pylocate32.conf")
+        if os.path.isfile(fullconfpath):
+            config.read(fullconfpath)
             try:
-                MinimizeToTray = config.getboolean("Settings", "MinimizeToTray")
-                UpdateFinishedNotification = config.getboolean("Settings", "UpdateFinishedNotification")
-                HideMainOnStartup = config.getboolean("Settings", "HideMainOnStartup")
+                MinimizeToTray = config.getboolean("Settings", "minimizetotray")
+                UpdateFinishedNotification = config.getboolean("Settings", "updatefinishednotification")
+                HideMainOnStartup = config.getboolean("Settings", "hidemainonstartup")
                 
                 if(MinimizeToTray):
                     self.cb_minimize.setCheckState(2)
@@ -407,19 +408,19 @@ class SettingsWindow(QtGui.QWidget, Ui_SettingsWindow):
         else:
             QtGui.QMessageBox.information(main_window, "pyLocate32 - Settings", "Config file missing, creating new config file.")
             config.add_section("Settings")
-            config.set("Settings", "MinimizeToTray", "True")
-            config.set("Settings", "UpdateFinishedNotification", "True")
-            config.set("Settings", "HideMainOnStartup", "True")
+            config.set("Settings", "minimizetotray", "True")
+            config.set("Settings", "updatefinishednotification", "True")
+            config.set("Settings", "hidemainonstartup", "True")
             try:
-                with open('pylocate32.conf', 'wb') as configfile:
+                with open(fullconfpath, 'wb') as configfile:
                     config.write(configfile)
-                QtGui.QMessageBox.information(main_window, "pyLocate32 - Settings", "Written config file pylocate32.conf.")
+                QtGui.QMessageBox.information(main_window, "pyLocate32 - Settings", "Written config file "+fullconfpath+".")
             except Exception as e:
-                QtGui.QMessageBox.warning(main_window, "pyLocate32 - Settings", "Error while writing pylocate32.conf:\n"+str(e))
+                QtGui.QMessageBox.warning(main_window, "pyLocate32 - Settings", "Error while writing "+fullconfpath+":\n"+str(e))
 
     def readconfig(self,strVar):
         try:
-            config.read("pylocate32.conf")
+            config.read(fullconfpath)
             var = config.getboolean("Settings", str(strVar))
             return var
         except Exception as e:
@@ -428,10 +429,10 @@ class SettingsWindow(QtGui.QWidget, Ui_SettingsWindow):
     def writeconfig(self, strVar, value):
         try:
             config.set("Settings", strVar, value)
-            with open('pylocate32.conf', 'wb') as configfile:
+            with open(fullconfpath, 'wb') as configfile:
                 config.write(configfile)
         except Exception as e:
-            QtGui.QMessageBox.warning(main_window, "pyLocate32 - Settings", "Error while writing pylocate32.conf:\nFunction:SettingsWindow.writeconfig(self, strVar, value)\nError:"+str(e))
+            QtGui.QMessageBox.warning(main_window, "pyLocate32 - Settings", "Error while writing "+fullconfpath+":\nFunction:SettingsWindow.writeconfig(self, strVar, value)\nError:"+str(e))
 
     def cb_minimize_changed(self, state):
         if state == 2:
@@ -824,9 +825,14 @@ if __name__ == "__main__":
     #What the updateTimer does when it fires
     app.connect(updateTimer, QtCore.SIGNAL("timeout()"), updateAnimation)
     app.connect(searchTimer, QtCore.SIGNAL("timeout()"), searchAnimation)
-
+    
+    #order of below is important, don't change!
     #The Main window
     main_window = MainWindow()
+    
+    #settings window
+    settings_window = SettingsWindow()
+    
     if not (readconfig(app,"hidemainonstartup")):
         main_window.show()
 
@@ -834,9 +840,6 @@ if __name__ == "__main__":
     tray_icon = TrayIcon()
     restoreTrayIcon()
     tray_icon.show()
-
-    #settings window
-    settings_window = SettingsWindow()
 
     #show/hide on tray icon click, double click won't work, always registers single click
     def tray_icon_event(reason):
