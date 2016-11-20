@@ -91,4 +91,9 @@ Locate32 NOTES
 #       (Make sure 'Qt::Orientation' is registered using qRegisterMetaType()
 #-clean code
 #
+#todolist for next version:
+#-multiple search button presses and it segfaults?
+#-after search mouse cursor stays on BusyCursor?
+
+
 '''
